@@ -25,7 +25,22 @@
               class="list-group-item d-flex justify-content-between align-items-center"
             >
               {{ item.name }}
-              <span>${{ item.price }}</span>
+              <span>
+                ${{ item.price }}
+                <button
+                  class="btn btn-sm btn-danger ms-2"
+                  @click="decreaseQuantity(index)"
+                >
+                  -
+                </button> 
+                {{ item.quantity }}
+                <button
+                  class="btn btn-sm btn-success ms-2"
+                  @click="increaseQuantity(index)"
+                >
+                  +
+                </button>
+              </span>
             </li>
           </ul>
           <h5>Total: ${{ total.toFixed(2) }}</h5>
@@ -73,7 +88,7 @@ export default {
   },
   computed: {
     total() {
-      return this.cart.reduce((sum, item) => sum + item.price * 1.08, 0)
+      return this.cart.reduce((sum, item) => sum + item.price * item.quantity * 1.08, 0)
     }
   },
   methods: {
@@ -90,7 +105,34 @@ export default {
       }
     },
     addToCart(product) {
-      this.cart.push(product)
+      const existing = this.cart.find(item => item._id === product._id)
+
+      if (existing) {
+        existing.quantity += 1
+      } else {
+        // if not in cart, add it
+        this.cart.push({
+          ...product,
+          quantity: 1 // initialize quantity
+        })
+      }
+
+      // save cart to localStorage
+      localStorage.setItem('cart', JSON.stringify(this.cart))
+
+    },
+
+    increaseQuantity(index) {
+      this.cart[index].quantity += 1
+      localStorage.setItem('cart', JSON.stringify(this.cart))
+    },
+
+    decreaseQuantity(index) {
+      if (this.cart[index].quantity > 1) {
+        this.cart[index].quantity -= 1
+      } else {
+        this.cart.splice(index, 1)
+      }
       localStorage.setItem('cart', JSON.stringify(this.cart))
     }
   },
@@ -138,5 +180,12 @@ export default {
   background-color: #1a1a1a;
   color: #fff;
   border: 1px solid #333;
+}
+
+.btn {
+  border-radius: 8px;
+  transition: background-color 0.2s;
+  width: 32px;
+  height: 32px;
 }
 </style>
